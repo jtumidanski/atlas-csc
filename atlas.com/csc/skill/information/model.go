@@ -28,7 +28,7 @@ type Effect struct {
 	mmpR          byte
 	hpCon         uint16
 	mpCon         uint16
-	duration      int32
+	duration      uint32
 	target        uint32
 	barrier       uint32
 	mob           uint32
@@ -60,12 +60,30 @@ type Effect struct {
 	bulletConsume        uint16
 	mapProtection        byte
 	cureAbnormalStatuses []string
+	statups              []Statup
 }
 
-func (e Effect) Duration() int32 {
+func (e Effect) Duration() uint32 {
 	return e.duration
+}
+
+func (e Effect) StatUps() []Statup {
+	return e.statups
 }
 
 func (m Model) Effects() []Effect {
 	return m.effects
+}
+
+type Statup struct {
+	buff   string
+	amount uint32
+}
+
+func (s Statup) Mask() string {
+	return s.buff
+}
+
+func (s Statup) Amount() uint32 {
+	return s.amount
 }

@@ -16,66 +16,89 @@ func GetById(l logrus.FieldLogger) func(skillId uint32) (*Model, error) {
 func makeSkill(data dataBody) *Model {
 	attr := data.Attributes
 
-	var effects = make([]Effect, 0)
-	for _, effect := range attr.Effects {
-		effects = append(effects, Effect{
-			weaponAttack:         effect.WeaponAttack,
-			magicAttack:          effect.MagicAttack,
-			weaponDefense:        effect.WeaponDefense,
-			magicDefense:         effect.MagicDefense,
-			accuracy:             effect.Accuracy,
-			avoidability:         effect.Avoidability,
-			speed:                effect.Speed,
-			jump:                 effect.Jump,
-			hp:                   effect.HP,
-			mp:                   effect.MP,
-			hpr:                  effect.HPR,
-			mpr:                  effect.MPR,
-			mhprRate:             effect.MHPRRate,
-			mmprRate:             effect.MMPRRate,
-			mobSkill:             effect.MobSkill,
-			mobSkillLevel:        effect.MobSkillLevel,
-			mhpR:                 effect.MHPR,
-			mmpR:                 effect.MMPR,
-			hpCon:                effect.HPCon,
-			mpCon:                effect.MPCon,
-			duration:             effect.Duration,
-			target:               effect.Target,
-			barrier:              effect.Barrier,
-			mob:                  effect.Mob,
-			overtime:             effect.OverTime,
-			repeatEffect:         effect.RepeatEffect,
-			moveTo:               effect.MoveTo,
-			cp:                   effect.CP,
-			nuffSkill:            effect.NuffSkill,
-			skill:                effect.Skill,
-			x:                    effect.X,
-			y:                    effect.Y,
-			mobCount:             effect.MobCount,
-			moneyCon:             effect.MoneyCon,
-			cooldown:             effect.Cooldown,
-			morphId:              effect.MorphId,
-			ghost:                effect.Ghost,
-			fatigue:              effect.Fatigue,
-			berserk:              effect.Berserk,
-			booster:              effect.Booster,
-			prop:                 effect.Prop,
-			itemCon:              effect.ItemCon,
-			itemConNo:            effect.ItemConNo,
-			damage:               effect.Damage,
-			attackCount:          effect.AttackCount,
-			fixDamage:            effect.FixDamage,
-			bulletCount:          effect.BulletCount,
-			bulletConsume:        effect.BulletConsume,
-			mapProtection:        effect.MapProtection,
-			cureAbnormalStatuses: effect.CureAbnormalStatuses,
-		})
-	}
-
 	return &Model{
 		action:        attr.Action,
 		element:       attr.Element,
 		animationTime: attr.AnimationTime,
-		effects:       effects,
+		effects:       makeEffects(attr.Effects),
+	}
+}
+
+func makeEffects(es []effects) []Effect {
+	var results = make([]Effect, 0)
+	for _, e := range es {
+		results = append(results, makeEffect(e))
+	}
+	return results
+}
+
+func makeEffect(e effects) Effect {
+	return Effect{
+		weaponAttack:         e.WeaponAttack,
+		magicAttack:          e.MagicAttack,
+		weaponDefense:        e.WeaponDefense,
+		magicDefense:         e.MagicDefense,
+		accuracy:             e.Accuracy,
+		avoidability:         e.Avoidability,
+		speed:                e.Speed,
+		jump:                 e.Jump,
+		hp:                   e.HP,
+		mp:                   e.MP,
+		hpr:                  e.HPR,
+		mpr:                  e.MPR,
+		mhprRate:             e.MHPRRate,
+		mmprRate:             e.MMPRRate,
+		mobSkill:             e.MobSkill,
+		mobSkillLevel:        e.MobSkillLevel,
+		mhpR:                 e.MHPR,
+		mmpR:                 e.MMPR,
+		hpCon:                e.HPCon,
+		mpCon:                e.MPCon,
+		duration:             e.Duration,
+		target:               e.Target,
+		barrier:              e.Barrier,
+		mob:                  e.Mob,
+		overtime:             e.OverTime,
+		repeatEffect:         e.RepeatEffect,
+		moveTo:               e.MoveTo,
+		cp:                   e.CP,
+		nuffSkill:            e.NuffSkill,
+		skill:                e.Skill,
+		x:                    e.X,
+		y:                    e.Y,
+		mobCount:             e.MobCount,
+		moneyCon:             e.MoneyCon,
+		cooldown:             e.Cooldown,
+		morphId:              e.MorphId,
+		ghost:                e.Ghost,
+		fatigue:              e.Fatigue,
+		berserk:              e.Berserk,
+		booster:              e.Booster,
+		prop:                 e.Prop,
+		itemCon:              e.ItemCon,
+		itemConNo:            e.ItemConNo,
+		damage:               e.Damage,
+		attackCount:          e.AttackCount,
+		fixDamage:            e.FixDamage,
+		bulletCount:          e.BulletCount,
+		bulletConsume:        e.BulletConsume,
+		mapProtection:        e.MapProtection,
+		cureAbnormalStatuses: e.CureAbnormalStatuses,
+		statups:              makeStatups(e.Statups),
+	}
+}
+
+func makeStatups(statups []buffStatAmount) []Statup {
+	results := make([]Statup, 0)
+	for _, s := range statups {
+		results = append(results, makeStatup(s))
+	}
+	return results
+}
+
+func makeStatup(s buffStatAmount) Statup {
+	return Statup{
+		buff:   s.Buff,
+		amount: s.Amount,
 	}
 }
