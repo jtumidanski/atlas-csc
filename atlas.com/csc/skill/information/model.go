@@ -28,7 +28,7 @@ type Effect struct {
 	mmpR          byte
 	hpCon         uint16
 	mpCon         uint16
-	duration      uint32
+	duration      int32
 	target        uint32
 	barrier       uint32
 	mob           uint32
@@ -63,7 +63,7 @@ type Effect struct {
 	statups              []Statup
 }
 
-func (e Effect) Duration() uint32 {
+func (e Effect) Duration() int32 {
 	return e.duration
 }
 

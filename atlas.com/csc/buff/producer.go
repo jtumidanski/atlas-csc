@@ -8,7 +8,7 @@ import (
 type characterBuffEvent struct {
 	CharacterId uint32 `json:"characterId"`
 	BuffId      uint32 `json:"id"`
-	Duration    uint32 `json:"duration"`
+	Duration    int32 `json:"duration"`
 	Stats       []Stat `json:"stats"`
 	Special     bool   `json:"special"`
 }
@@ -24,9 +24,9 @@ type stat struct {
 	Amount uint16 `json:"amount"`
 }
 
-func Give(l logrus.FieldLogger) func(characterId uint32, buffId uint32, duration uint32, stats []Stat, special bool) {
+func Give(l logrus.FieldLogger) func(characterId uint32, buffId uint32, duration int32, stats []Stat, special bool) {
 	producer := producers.ProduceEvent(l, "TOPIC_CHARACTER_BUFF")
-	return func(characterId uint32, buffId uint32, duration uint32, stats []Stat, special bool) {
+	return func(characterId uint32, buffId uint32, duration int32, stats []Stat, special bool) {
 		e := characterBuffEvent{
 			CharacterId: characterId,
 			BuffId:      buffId,
