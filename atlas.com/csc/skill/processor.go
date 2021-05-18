@@ -92,7 +92,9 @@ func applyEffect(l logrus.FieldLogger) func(characterId uint32, skillId uint32, 
 		statups := makeStatUps(effect.StatUps())
 		expiration := time.Now().Unix() + int64(effect.Duration())
 		buff.GetRegistry().Register(characterId, skillId, buff.NewModel(expiration, statups))
-		buff.Give(l)(characterId, skillId, effect.Duration(), statups, specialBuff)
+		if len(statups) > 0 {
+			buff.Give(l)(characterId, skillId, effect.Duration(), statups, specialBuff)
+		}
 	}
 }
 
