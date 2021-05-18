@@ -3,6 +3,8 @@ package skill
 const (
 	BeginnerEchoOfHero uint32 = 1005
 
+	ClericHeal uint32 = 2301002
+
 	PriestMysticDoor uint32 = 2311002
 
 	BrawlerMPRecovery uint32 = 5101005

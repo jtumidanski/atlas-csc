@@ -25,8 +25,9 @@ func makeCharacterAttributes(ca *dataBody) *Model {
 	}
 	att := ca.Attributes
 	r := Model{
-		id: uint32(cid),
-		hp: att.Hp,
+		id:    uint32(cid),
+		hp:    att.Hp,
+		maxHP: att.MaxHp,
 	}
 	return &r
 }

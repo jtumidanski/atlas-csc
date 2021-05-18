@@ -71,6 +71,10 @@ func (e Effect) StatUps() []Statup {
 	return e.statups
 }
 
+func (e Effect) HP() uint16 {
+	return e.hp
+}
+
 func (m Model) Effects() []Effect {
 	return m.effects
 }

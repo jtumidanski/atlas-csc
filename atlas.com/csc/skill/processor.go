@@ -6,6 +6,7 @@ import (
 	"atlas-csc/character/skill"
 	"atlas-csc/skill/information"
 	"github.com/sirupsen/logrus"
+	"math"
 	"time"
 )
 
@@ -87,14 +88,49 @@ func applyEffect(l logrus.FieldLogger) func(characterId uint32, skillId uint32, 
 
 		// do gm hide
 		// do cleric / gm heal
+		if skillId == ClericHeal {
+			applyHeal(l)(characterId, skillId, level, effect)
+			return
+		}
 
-		specialBuff := isSpecial(effect.StatUps())
 		statups := makeStatUps(effect.StatUps())
-		expiration := time.Now().Unix() + int64(effect.Duration())
-		buff.GetRegistry().Register(characterId, skillId, buff.NewModel(expiration, statups))
 		if len(statups) > 0 {
+			specialBuff := isSpecial(effect.StatUps())
+			expiration := time.Now().Unix() + int64(effect.Duration())
+			buff.GetRegistry().Register(characterId, skillId, buff.NewModel(expiration, statups))
 			buff.Give(l)(characterId, skillId, effect.Duration(), statups, specialBuff)
 		}
+	}
+}
+
+func applyHeal(l logrus.FieldLogger) func(characterId uint32, skillId uint32, level uint8, effect information.Effect) {
+	return func(characterId uint32, skillId uint32, level uint8, effect information.Effect) {
+		// TODO heal any characters in range of heal, and in party (if cleric heal), and alive
+		impactedCount := uint8(1)
+		impacted := make([]uint32, 0)
+		impactedCount += uint8(len(impacted))
+
+		for _, id := range impacted {
+			l.Debugf("Healing character %d thanks to character %d.", id, characterId)
+			heal(l)(characterId, id, effect, impactedCount)
+			// TODO show own buff
+			// TODO show buff effect
+		}
+
+		heal(l)(characterId, characterId, effect, impactedCount)
+	}
+}
+
+func heal(l logrus.FieldLogger) func(casterId uint32, impactedId uint32, effect information.Effect, impactedCount uint8) {
+	return func(casterId uint32, impactedId uint32, effect information.Effect, impactedCount uint8) {
+		l.Debugf("Healing %d from %d.", impactedId, casterId)
+		c, err := character.GetCharacterById(casterId)
+		if err != nil {
+			l.WithError(err).Errorf("Error retrieving character %d who performed the heal.", casterId)
+			return
+		}
+		amount := int16(math.Floor(float64(c.MaxHP()) * float64(effect.HP()) / (100.0 * float64(impactedCount))))
+		character.AdjustHealth(l)(impactedId, amount)
 	}
 }
 
