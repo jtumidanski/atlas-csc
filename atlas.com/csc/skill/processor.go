@@ -124,7 +124,7 @@ func applyHeal(l logrus.FieldLogger) func(characterId uint32, skillId uint32, le
 func heal(l logrus.FieldLogger) func(casterId uint32, impactedId uint32, effect information.Effect, impactedCount uint8) {
 	return func(casterId uint32, impactedId uint32, effect information.Effect, impactedCount uint8) {
 		l.Debugf("Healing %d from %d.", impactedId, casterId)
-		c, err := character.GetCharacterById(casterId)
+		c, err := character.GetCharacterById(l)(casterId)
 		if err != nil {
 			l.WithError(err).Errorf("Error retrieving character %d who performed the heal.", casterId)
 			return

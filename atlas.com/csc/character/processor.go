@@ -6,16 +6,18 @@ import (
 	"strconv"
 )
 
-func GetCharacterById(characterId uint32) (*Model, error) {
-	cs, err := requestCharacter(characterId)
-	if err != nil {
-		return nil, err
+func GetCharacterById(l logrus.FieldLogger) func(characterId uint32) (*Model, error) {
+	return func(characterId uint32) (*Model, error) {
+		cs, err := requestCharacter(l)(characterId)
+		if err != nil {
+			return nil, err
+		}
+		ca := makeCharacterAttributes(cs.Data())
+		if ca == nil {
+			return nil, errors.New("unable to make character attributes")
+		}
+		return ca, nil
 	}
-	ca := makeCharacterAttributes(cs.Data())
-	if ca == nil {
-		return nil, errors.New("unable to make character attributes")
-	}
-	return ca, nil
 }
 
 func makeCharacterAttributes(ca *dataBody) *Model {
@@ -34,7 +36,7 @@ func makeCharacterAttributes(ca *dataBody) *Model {
 
 func IsAlive(l logrus.FieldLogger) func(characterId uint32) bool {
 	return func(characterId uint32) bool {
-		c, err := GetCharacterById(characterId)
+		c, err := GetCharacterById(l)(characterId)
 		if err != nil {
 			l.WithError(err).Errorf("Unable to locate character %d for health check, assuming true.", characterId)
 			return true

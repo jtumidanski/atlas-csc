@@ -7,7 +7,7 @@ import (
 
 func GetSkillForCharacter(l logrus.FieldLogger) func(characterId uint32, skillId uint32) (*Model, error) {
 	return func(characterId uint32, skillId uint32) (*Model, error) {
-		r, err := requestSkill(characterId, skillId)
+		r, err := requestSkill(l)(characterId, skillId)
 		if err != nil {
 			l.WithError(err).Errorf("Unable to get skill %d for character %d.", skillId, characterId)
 			return nil, err
