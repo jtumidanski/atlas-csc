@@ -2,6 +2,7 @@ package buff
 
 import (
 	producers "atlas-csc/kafka/producer"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
 
@@ -24,8 +25,8 @@ type stat struct {
 	Amount uint16 `json:"amount"`
 }
 
-func Give(l logrus.FieldLogger) func(characterId uint32, buffId uint32, duration int32, stats []Stat, special bool) {
-	producer := producers.ProduceEvent(l, "TOPIC_CHARACTER_BUFF")
+func Give(l logrus.FieldLogger, span opentracing.Span) func(characterId uint32, buffId uint32, duration int32, stats []Stat, special bool) {
+	producer := producers.ProduceEvent(l, span, "TOPIC_CHARACTER_BUFF")
 	return func(characterId uint32, buffId uint32, duration int32, stats []Stat, special bool) {
 		e := characterBuffEvent{
 			CharacterId: characterId,
@@ -38,8 +39,8 @@ func Give(l logrus.FieldLogger) func(characterId uint32, buffId uint32, duration
 	}
 }
 
-func Cancel(l logrus.FieldLogger) func(characterId uint32, stats []Stat) {
-	producer := producers.ProduceEvent(l, "TOPIC_CHARACTER_CANCEL_BUFF")
+func Cancel(l logrus.FieldLogger, span opentracing.Span) func(characterId uint32, stats []Stat) {
+	producer := producers.ProduceEvent(l, span, "TOPIC_CHARACTER_CANCEL_BUFF")
 	return func(characterId uint32, stats []Stat) {
 		e := characterCancelBuffEvent{
 			CharacterId: characterId,

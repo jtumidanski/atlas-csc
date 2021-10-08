@@ -2,6 +2,7 @@ package skill
 
 import (
 	"atlas-csc/kafka/handler"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
 
@@ -20,9 +21,9 @@ func CreateApplySkillCommand() handler.EmptyEventCreator {
 }
 
 func HandleApplySkill() handler.EventHandler {
-	return func(l logrus.FieldLogger, e interface{}) {
+	return func(l logrus.FieldLogger, span opentracing.Span, e interface{}) {
 		if event, ok := e.(*applySkillCommand); ok {
-			ApplySkill(l)(event.CharacterId, event.SkillId, event.Level, event.X, event.Y)
+			ApplySkill(l, span)(event.CharacterId, event.SkillId, event.Level, event.X, event.Y)
 		} else {
 			l.Errorf("Unable to cast event provided to handler")
 		}
@@ -49,7 +50,7 @@ func CreateApplyMonsterMagnetCommand() handler.EmptyEventCreator {
 }
 
 func HandleApplyMonsterMagnet() handler.EventHandler {
-	return func(l logrus.FieldLogger, e interface{}) {
+	return func(l logrus.FieldLogger, span opentracing.Span, e interface{}) {
 
 	}
 }

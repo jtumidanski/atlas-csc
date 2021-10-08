@@ -5,6 +5,7 @@ import (
 	"atlas-csc/character"
 	"atlas-csc/character/skill"
 	"atlas-csc/skill/information"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"math"
 	"time"
@@ -19,9 +20,9 @@ func Is(referenceId uint32, options ...uint32) bool {
 	return false
 }
 
-func ApplySkill(l logrus.FieldLogger) func(characterId uint32, skillId uint32, level uint8, x int16, y int16) {
+func ApplySkill(l logrus.FieldLogger, span opentracing.Span) func(characterId uint32, skillId uint32, level uint8, x int16, y int16) {
 	return func(characterId uint32, skillId uint32, level uint8, x int16, y int16) {
-		cs, err := skill.GetSkillForCharacter(l)(characterId, skillId)
+		cs, err := skill.GetSkillForCharacter(l, span)(characterId, skillId)
 		if err != nil {
 			l.WithError(err).Errorf("Cannot retrieve skill %d for character %d.", skillId, characterId)
 			return
@@ -53,8 +54,8 @@ func ApplySkill(l logrus.FieldLogger) func(characterId uint32, skillId uint32, l
 		}
 
 		// if character is dead
-		if !character.IsAlive(l)(characterId) {
-			character.EnableActions(l)(characterId)
+		if !character.IsAlive(l, span)(characterId) {
+			character.EnableActions(l, span)(characterId)
 			return
 		}
 
@@ -62,7 +63,7 @@ func ApplySkill(l logrus.FieldLogger) func(characterId uint32, skillId uint32, l
 			// check if the user can use mystic door
 			// if so, apply new door
 			// if not, show pink text of cooldown
-			character.EnableActions(l)(characterId)
+			character.EnableActions(l, span)(characterId)
 			return
 		}
 
@@ -71,13 +72,13 @@ func ApplySkill(l logrus.FieldLogger) func(characterId uint32, skillId uint32, l
 			return
 		}
 
-		applyEffect(l)(characterId, skillId, level)
+		applyEffect(l, span)(characterId, skillId, level)
 	}
 }
 
-func applyEffect(l logrus.FieldLogger) func(characterId uint32, skillId uint32, level uint8) {
+func applyEffect(l logrus.FieldLogger, span opentracing.Span) func(characterId uint32, skillId uint32, level uint8) {
 	return func(characterId uint32, skillId uint32, level uint8) {
-		si, err := information.GetById(l)(skillId)
+		si, err := information.GetById(l, span)(skillId)
 		if err != nil {
 			l.WithError(err).Errorf("Unable to retrieve skill %d information.", skillId)
 			return
@@ -89,7 +90,7 @@ func applyEffect(l logrus.FieldLogger) func(characterId uint32, skillId uint32, 
 		// do gm hide
 		// do cleric / gm heal
 		if skillId == ClericHeal {
-			applyHeal(l)(characterId, skillId, level, effect)
+			applyHeal(l, span)(characterId, skillId, level, effect)
 			return
 		}
 
@@ -98,12 +99,12 @@ func applyEffect(l logrus.FieldLogger) func(characterId uint32, skillId uint32, 
 			specialBuff := isSpecial(effect.StatUps())
 			expiration := time.Now().Unix() + int64(effect.Duration())
 			buff.GetRegistry().Register(characterId, skillId, buff.NewModel(expiration, statups))
-			buff.Give(l)(characterId, skillId, effect.Duration(), statups, specialBuff)
+			buff.Give(l, span)(characterId, skillId, effect.Duration(), statups, specialBuff)
 		}
 	}
 }
 
-func applyHeal(l logrus.FieldLogger) func(characterId uint32, skillId uint32, level uint8, effect information.Effect) {
+func applyHeal(l logrus.FieldLogger, span opentracing.Span) func(characterId uint32, skillId uint32, level uint8, effect information.Effect) {
 	return func(characterId uint32, skillId uint32, level uint8, effect information.Effect) {
 		// TODO heal any characters in range of heal, and in party (if cleric heal), and alive
 		impactedCount := uint8(1)
@@ -112,25 +113,25 @@ func applyHeal(l logrus.FieldLogger) func(characterId uint32, skillId uint32, le
 
 		for _, id := range impacted {
 			l.Debugf("Healing character %d thanks to character %d.", id, characterId)
-			heal(l)(characterId, id, effect, impactedCount)
+			heal(l, span)(characterId, id, effect, impactedCount)
 			// TODO show own buff
 			// TODO show buff effect
 		}
 
-		heal(l)(characterId, characterId, effect, impactedCount)
+		heal(l, span)(characterId, characterId, effect, impactedCount)
 	}
 }
 
-func heal(l logrus.FieldLogger) func(casterId uint32, impactedId uint32, effect information.Effect, impactedCount uint8) {
+func heal(l logrus.FieldLogger, span opentracing.Span) func(casterId uint32, impactedId uint32, effect information.Effect, impactedCount uint8) {
 	return func(casterId uint32, impactedId uint32, effect information.Effect, impactedCount uint8) {
 		l.Debugf("Healing %d from %d.", impactedId, casterId)
-		c, err := character.GetCharacterById(l)(casterId)
+		c, err := character.GetCharacterById(l, span)(casterId)
 		if err != nil {
 			l.WithError(err).Errorf("Error retrieving character %d who performed the heal.", casterId)
 			return
 		}
 		amount := int16(math.Floor(float64(c.MaxHP()) * float64(effect.HP()) / (100.0 * float64(impactedCount))))
-		character.AdjustHealth(l)(impactedId, amount)
+		character.AdjustHealth(l, span)(impactedId, amount)
 	}
 }
 
