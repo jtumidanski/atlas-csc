@@ -1,7 +1,7 @@
 package buff
 
 import (
-	producers "atlas-csc/kafka/producer"
+	"atlas-csc/kafka"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
@@ -9,7 +9,7 @@ import (
 type characterBuffEvent struct {
 	CharacterId uint32 `json:"characterId"`
 	BuffId      uint32 `json:"id"`
-	Duration    int32 `json:"duration"`
+	Duration    int32  `json:"duration"`
 	Stats       []Stat `json:"stats"`
 	Special     bool   `json:"special"`
 }
@@ -26,7 +26,7 @@ type stat struct {
 }
 
 func Give(l logrus.FieldLogger, span opentracing.Span) func(characterId uint32, buffId uint32, duration int32, stats []Stat, special bool) {
-	producer := producers.ProduceEvent(l, span, "TOPIC_CHARACTER_BUFF")
+	producer := kafka.ProduceEvent(l, span, "TOPIC_CHARACTER_BUFF")
 	return func(characterId uint32, buffId uint32, duration int32, stats []Stat, special bool) {
 		e := characterBuffEvent{
 			CharacterId: characterId,
@@ -35,18 +35,18 @@ func Give(l logrus.FieldLogger, span opentracing.Span) func(characterId uint32, 
 			Stats:       stats,
 			Special:     special,
 		}
-		producer(producers.CreateKey(int(characterId)), e)
+		producer(kafka.CreateKey(int(characterId)), e)
 	}
 }
 
 func Cancel(l logrus.FieldLogger, span opentracing.Span) func(characterId uint32, stats []Stat) {
-	producer := producers.ProduceEvent(l, span, "TOPIC_CHARACTER_CANCEL_BUFF")
+	producer := kafka.ProduceEvent(l, span, "TOPIC_CHARACTER_CANCEL_BUFF")
 	return func(characterId uint32, stats []Stat) {
 		e := characterCancelBuffEvent{
 			CharacterId: characterId,
 			Stats:       makeStats(stats),
 		}
-		producer(producers.CreateKey(int(characterId)), e)
+		producer(kafka.CreateKey(int(characterId)), e)
 	}
 }
 

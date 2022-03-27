@@ -1,7 +1,7 @@
 package character
 
 import (
-	producers "atlas-csc/kafka/producer"
+	"atlas-csc/kafka"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
@@ -11,10 +11,10 @@ type enableActionsEvent struct {
 }
 
 func EnableActions(l logrus.FieldLogger, span opentracing.Span) func(characterId uint32) {
-	producer := producers.ProduceEvent(l, span, "TOPIC_ENABLE_ACTIONS")
+	producer := kafka.ProduceEvent(l, span, "TOPIC_ENABLE_ACTIONS")
 	return func(characterId uint32) {
 		e := &enableActionsEvent{CharacterId: characterId}
-		producer(producers.CreateKey(int(characterId)), e)
+		producer(kafka.CreateKey(int(characterId)), e)
 	}
 }
 
@@ -24,12 +24,12 @@ type adjustHealthEvent struct {
 }
 
 func AdjustHealth(l logrus.FieldLogger, span opentracing.Span) func(characterId uint32, amount int16) {
-	producer := producers.ProduceEvent(l, span, "TOPIC_ADJUST_HEALTH")
+	producer := kafka.ProduceEvent(l, span, "TOPIC_ADJUST_HEALTH")
 	return func(characterId uint32, amount int16) {
 		e := &adjustHealthEvent{
 			CharacterId: characterId,
 			Amount:      amount,
 		}
-		producer(producers.CreateKey(int(characterId)), e)
+		producer(kafka.CreateKey(int(characterId)), e)
 	}
 }

@@ -2,8 +2,9 @@ package main
 
 import (
 	"atlas-csc/buff"
-	consumers "atlas-csc/kafka/consumer"
+	"atlas-csc/kafka"
 	"atlas-csc/logger"
+	"atlas-csc/skill"
 	tasks "atlas-csc/task"
 	"atlas-csc/tracing"
 	"context"
@@ -15,6 +16,7 @@ import (
 )
 
 const serviceName = "atlas-csc"
+const consumerGroupId = "Character Skill Coordinator"
 
 func main() {
 	l := logger.CreateLogger(serviceName)
@@ -34,7 +36,9 @@ func main() {
 		}
 	}(tc)
 
-	consumers.CreateEventConsumers(l, ctx, wg)
+	kafka.CreateConsumers(l, ctx, wg,
+		skill.ApplySkillConsumer(consumerGroupId),
+		skill.ApplyMonsterMagnetConsumer(consumerGroupId))
 
 	go tasks.Register(buff.ExpireTask(l))
 
