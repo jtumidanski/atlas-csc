@@ -4,6 +4,7 @@ import (
 	"atlas-csc/buff"
 	"atlas-csc/character"
 	"atlas-csc/character/skill"
+	"atlas-csc/model"
 	"atlas-csc/skill/information"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
@@ -125,7 +126,7 @@ func applyHeal(l logrus.FieldLogger, span opentracing.Span) func(characterId uin
 func heal(l logrus.FieldLogger, span opentracing.Span) func(casterId uint32, impactedId uint32, effect information.Effect, impactedCount uint8) {
 	return func(casterId uint32, impactedId uint32, effect information.Effect, impactedCount uint8) {
 		l.Debugf("Healing %d from %d.", impactedId, casterId)
-		c, err := character.GetCharacterById(l, span)(casterId)
+		c, err := character.GetById(l, span)(casterId)
 		if err != nil {
 			l.WithError(err).Errorf("Error retrieving character %d who performed the heal.", casterId)
 			return
@@ -136,16 +137,13 @@ func heal(l logrus.FieldLogger, span opentracing.Span) func(casterId uint32, imp
 }
 
 func makeStatUps(statUps []information.Statup) []buff.Stat {
-	results := make([]buff.Stat, 0)
-	for _, stat := range statUps {
-		results = append(results, makeStatUp(stat))
-	}
-	return results
+	r, _ := model.SliceMap[information.Statup, buff.Stat](model.FixedSliceProvider[information.Statup](statUps), makeStatUp)()
+	return r
 }
 
-func makeStatUp(stat information.Statup) buff.Stat {
+func makeStatUp(stat information.Statup) (buff.Stat, error) {
 	mask := buff.GetMask(stat.Mask())
-	return buff.Stat{First: buff.First(mask), Mask: mask, Amount: uint16(stat.Amount())}
+	return buff.Stat{First: buff.First(mask), Mask: mask, Amount: uint16(stat.Amount())}, nil
 }
 
 func isSpecial(statups []information.Statup) bool {
